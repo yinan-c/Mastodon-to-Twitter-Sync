@@ -16,6 +16,9 @@ import threading
 from moviepy.editor import VideoFileClip, concatenate_videoclips
 import re
 
+url_regex = re.compile(r'https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()!@:%_\+.~#?&\/\/=]*)')
+# Url regex from https://ihateregex.io/, official twitter doc from https://github.com/twitter/twitter-text/) 
+
 def count_length(text):
     '''
     根据 Twitter 的方式，计算文本长度，中文字符，全角字符以及 emoji 算2个字符，英文字符算1个字符
@@ -215,8 +218,22 @@ def download_media(media_URL,filename):
     with open(__target, 'wb') as f:
         f.write(r.content)
 
-def split_toots(input_string: str, max_length: int = 270):
-    # 文段以 max_length = 270 字符进行拆分，返回拆分后的列表，并在结尾加入进度标记
+def split_toots(input_string: str, max_length: int = 272):
+    '''
+    默认文段以 max_length = 272 字符进行拆分，返回拆分后的列表，并在结尾加入进度标记
+    如果文段中含有符合 regex 的链接，每个链接减去 23 个最大字符（推特将链接转成 t.co 链接，长度为 23 个字符）
+    ref: https://developer.twitter.com/en/docs/counting-characters
+
+    注意在发送推文时，请尽量使用带有协议的链接，如 https:// 或 http://，理由如下：
+    推特会把没有 https, http protocol 的 xxx.tld 也识别为链接
+    而这里为了防止误判某些句点(.)后忘记加空格的推文而过度裁切，所以只识别带有协议的链接进行裁切
+    所以若在 Mastodon 发布的推文中含有不加协议的链接 xxx.tld，后续代码不会进行裁切，导致推文过长而发送失败
+    '''
+
+    urls = url_regex.findall(input_string)
+    url_length = len(urls) * 23
+    max_length = max_length - url_length 
+
     parts = ceil(count_length(input_string) / max_length)  # 总共拆分数
     result = []
     current_part = ""
