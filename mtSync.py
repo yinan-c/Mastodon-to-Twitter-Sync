@@ -18,10 +18,10 @@ import re
 
 def count_length(text):
     '''
-    根据 Twitter 的方式，计算文本长度，中文字符以及 emoji 算2个字符，英文字符算1个字符
+    根据 Twitter 的方式，计算文本长度，中文字符，全角字符以及 emoji 算2个字符，英文字符算1个字符
     '''
     length = 0
-    special_char_pattern = re.compile(r'[\u4e00-\u9fff\U0001F000-\U0010ffff]')
+    special_char_pattern = re.compile(r'[\u4e00-\u9fff\U0001F000-\U0010ffff\uFF00-\uFFEF]')
     for char in text:
         if special_char_pattern.match(char):
             length += 2
@@ -223,7 +223,7 @@ def split_toots(input_string: str, max_length: int = 270):
     current_length = 0
 
     for char in input_string:
-        char_length = 2 if re.match(r'[\u4e00-\u9fff\U0001F000-\U0010ffff]', char) else 1
+        char_length = 2 if re.match(r'[\u4e00-\u9fff\U0001F000-\U0010ffff\uFF00-\uFFEF]', char) else 1
         if current_length + char_length <= max_length:
             current_part += char
             current_length += char_length
