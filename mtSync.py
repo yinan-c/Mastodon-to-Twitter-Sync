@@ -249,12 +249,10 @@ def split_toots(input_string: str, max_length: int = 272):
         char_length = 2 if re.match(r'[\u4e00-\u9fff\U0001F000-\U0010ffff\uFF00-\uFFEF]', char) else 1
         
         if url_regex.match(input_string[i:]):
-            url_length = 23
-            max_length_current = max_length - url_length
-        else:
-            max_length_current = max_length
-        
-        if current_length + char_length <= max_length_current:
+            # char length should be 23 - length of url
+            char_length = 23 - len(url_regex.match(input_string[i:]).group())
+            # print('char length:', char_length, 'url:', url_regex.match(input_string[i:]).group())
+        if current_length + char_length <= max_length:
             current_part += char
             current_length += char_length
         else:
