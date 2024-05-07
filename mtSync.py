@@ -247,7 +247,8 @@ def split_toots(input_string: str, max_length: int = 272):
 
     for i, char in enumerate(input_string):
         char_length = 2 if re.match(r'[\u4e00-\u9fff\U0001F000-\U0010ffff\uFF00-\uFFEF]', char) else 1
-        
+        part = len(result) + 1
+        tail = f'({part}/{parts})' if part == parts else f'...({part}/{parts})'
         if url_regex.match(input_string[i:]):
             # char length should be 23 - length of url
             char_length = 23 - len(url_regex.match(input_string[i:]).group())
@@ -257,13 +258,13 @@ def split_toots(input_string: str, max_length: int = 272):
             current_length += char_length
         else:
             safe_break = find_safe_break(input_string, last_break, i)
-            result.append(input_string[last_break:safe_break] + '...({part}/{all})'.format(part=len(result) + 1, all=parts))
+            result.append(input_string[last_break:safe_break] + tail)
             current_part = input_string[safe_break:i+1]
             current_length = count_length(current_part)
             last_break = safe_break
 
     if current_part:
-        result.append(current_part + '...({part}/{all})'.format(part=len(result) + 1, all=parts))
+        result.append(current_part + tail)
 
     return result
 
