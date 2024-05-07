@@ -14,6 +14,20 @@ import shutil
 from config import twitter_config, mastodon_config, main_config
 import threading
 from moviepy.editor import VideoFileClip, concatenate_videoclips
+import re
+
+def count_length(text):
+    '''
+    根据 Twitter 的方式，计算文本长度，中文字符以及 emoji 算2个字符，英文字符算1个字符
+    '''
+    length = 0
+    special_char_pattern = re.compile(r'[\u4e00-\u9fff\U0001F000-\U0010ffff]')
+    for char in text:
+        if special_char_pattern.match(char):
+            length += 2
+        else:
+            length += 1
+    return length
 
 last_toot_id = "xxx" # 上一次的嘟文id
 last_toot_text = "xxx" # 上一次的嘟文内容
@@ -201,13 +215,26 @@ def download_media(media_URL,filename):
     with open(__target, 'wb') as f:
         f.write(r.content)
 
-def split_toots(input_string : str):
-    # 文段以125字符进行拆分，返回拆分后的列表，并在结尾加入进度标记
-    parts = ceil(len(input_string)/125) # 总共拆分数
+def split_toots(input_string: str, max_length: int = 270):
+    # 文段以 max_length = 270 字符进行拆分，返回拆分后的列表，并在结尾加入进度标记
+    parts = ceil(count_length(input_string) / max_length)  # 总共拆分数
     result = []
-    while len(input_string) > 0:
-        result.append(input_string[:125] + '...({part}/{all})'.format(part = len(result)+1 ,all = parts))  # 将前125个字符加入列表中，加入如(1/4)的结尾标记
-        input_string = input_string[125:]  # 去除已加入列表的前125个字符
+    current_part = ""
+    current_length = 0
+
+    for char in input_string:
+        char_length = 2 if re.match(r'[\u4e00-\u9fff\U0001F000-\U0010ffff]', char) else 1
+        if current_length + char_length <= max_length:
+            current_part += char
+            current_length += char_length
+        else:
+            result.append(current_part + '...({part}/{all})'.format(part=len(result) + 1, all=parts))
+            current_part = char
+            current_length = char_length
+
+    if current_part:
+        result.append(current_part + '...({part}/{all})'.format(part=len(result) + 1, all=parts))
+
     return result
 
 @custom_retry
@@ -351,8 +378,8 @@ def sync_main(toot_id):
         tprint(colored('[Check] 这篇是仅媒体嘟文','green')) 
     if len(media_attachment_list) >= 5:
         tprint(colored('[Warning] 媒体数量超过4，超过Twitter最大展示量，只会展示4条媒体','yellow'))
-    if len(toot_text) > 280:
-        tprint(colored('[Warning] 嘟文过长！单篇推文最多支持280字','yellow'))
+    if count_length(toot_text) > 280: # 如果嘟文长度超过280字符，中文字符算2个字符，英文字符算1个字符
+        tprint(colored('[Warning] 嘟文过长！单篇推文最多支持280字符','yellow'))
         tprint(colored('[Warning] 将以回复方式同步剩余的内容','yellow'))
         long_tweet : bool = True # 长推文标记
     if  toot_text.startswith('@'):
