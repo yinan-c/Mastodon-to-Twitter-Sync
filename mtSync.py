@@ -219,6 +219,15 @@ def download_media(media_URL,filename):
     with open(__target, 'wb') as f:
         f.write(r.content)
 
+def find_safe_break(text, start, end):
+    '''
+    寻找在给定区间[start, end]内的安全断点，以空格作为分隔认为是安全的。
+    '''
+    last_space = text.rfind(' ', start, end)
+    if last_space != -1:
+        return last_space
+    return end  # 若找不到空格，返回end
+
 def split_toots(input_string: str, max_length: int = 272):
     '''
     默认文段以 max_length = 272 字符进行拆分，返回拆分后的列表，并在结尾加入进度标记
@@ -230,7 +239,6 @@ def split_toots(input_string: str, max_length: int = 272):
     而这里为了防止误判某些句点(.)后忘记加空格的推文而过度裁切，所以只识别带有协议的链接进行裁切
     所以若在 Mastodon 发布的推文中含有不加协议的链接 xxx.tld，后续代码不会进行裁切，导致推文过长而发送失败
     '''
-
     urls = url_regex.findall(input_string)
     url_length = len(urls) * 23
     max_length = max_length - url_length 
@@ -239,16 +247,19 @@ def split_toots(input_string: str, max_length: int = 272):
     result = []
     current_part = ""
     current_length = 0
+    last_break = 0
 
-    for char in input_string:
+    for i, char in enumerate(input_string):
         char_length = 2 if re.match(r'[\u4e00-\u9fff\U0001F000-\U0010ffff\uFF00-\uFFEF]', char) else 1
         if current_length + char_length <= max_length:
             current_part += char
             current_length += char_length
         else:
-            result.append(current_part + '...({part}/{all})'.format(part=len(result) + 1, all=parts))
-            current_part = char
-            current_length = char_length
+            safe_break = find_safe_break(input_string, last_break, i)
+            result.append(input_string[last_break:safe_break] + '...({part}/{all})'.format(part=len(result) + 1, all=parts))
+            current_part = input_string[safe_break:i+1]
+            current_length = count_length(current_part)
+            last_break = safe_break
 
     if current_part:
         result.append(current_part + '...({part}/{all})'.format(part=len(result) + 1, all=parts))
