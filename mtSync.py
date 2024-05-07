@@ -239,10 +239,6 @@ def split_toots(input_string: str, max_length: int = 272):
     而这里为了防止误判某些句点(.)后忘记加空格的推文而过度裁切，所以只识别带有协议的链接进行裁切
     所以若在 Mastodon 发布的推文中含有不加协议的链接 xxx.tld，后续代码不会进行裁切，导致推文过长而发送失败
     '''
-    urls = url_regex.findall(input_string)
-    url_length = len(urls) * 23
-    max_length = max_length - url_length 
-
     parts = ceil(count_length(input_string) / max_length)  # 总共拆分数
     result = []
     current_part = ""
@@ -251,7 +247,14 @@ def split_toots(input_string: str, max_length: int = 272):
 
     for i, char in enumerate(input_string):
         char_length = 2 if re.match(r'[\u4e00-\u9fff\U0001F000-\U0010ffff\uFF00-\uFFEF]', char) else 1
-        if current_length + char_length <= max_length:
+        
+        if url_regex.match(input_string[i:]):
+            url_length = 23
+            max_length_current = max_length - url_length
+        else:
+            max_length_current = max_length
+        
+        if current_length + char_length <= max_length_current:
             current_part += char
             current_length += char_length
         else:
