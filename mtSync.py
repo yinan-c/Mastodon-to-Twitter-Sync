@@ -25,6 +25,7 @@ def count_length(text):
     '''
     length = 0
     special_char_pattern = re.compile(r'[\u4e00-\u9fff\U0001F000-\U0010ffff\uFF00-\uFFEF]')
+    text = re.sub(url_regex, ' '*23, text) # 将链接替换为23个空格，因为链接会被转换为t.co链接，长度为23个字符
     for char in text:
         if special_char_pattern.match(char):
             length += 2
