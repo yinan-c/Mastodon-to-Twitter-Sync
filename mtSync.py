@@ -351,8 +351,8 @@ def sync_main(toot_id):
         tprint(colored('[Check] 这篇是仅媒体嘟文','green')) 
     if len(media_attachment_list) >= 5:
         tprint(colored('[Warning] 媒体数量超过4，超过Twitter最大展示量，只会展示4条媒体','yellow'))
-    if len(toot_text) > 140:
-        tprint(colored('[Warning] 嘟文过长！单篇推文最多支持140字','yellow'))
+    if len(toot_text) > 280:
+        tprint(colored('[Warning] 嘟文过长！单篇推文最多支持280字','yellow'))
         tprint(colored('[Warning] 将以回复方式同步剩余的内容','yellow'))
         long_tweet : bool = True # 长推文标记
     if  toot_text.startswith('@'):
