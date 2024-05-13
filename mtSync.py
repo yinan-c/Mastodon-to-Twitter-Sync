@@ -158,7 +158,7 @@ def prepare_video(input_file,output_file, target_duration = 2):
 def check_mp4_duration():
     # 检查媒体文件夹下的所有视频文件长度是否小于1秒，如果小于1秒则复制到1秒
     media_folder = os.path.join(os.getcwd(),'media')
-    for file in os.listdir(media_folder):
+    for file in sorted(os.listdir(media_folder)):
         file_path = os.path.join(media_folder,file)
         output_file = os.path.join(media_folder,'#'+file) # 重命名为#开头的文件，防止重复
         if file_path.endswith('.mp4'):
@@ -437,7 +437,7 @@ def sync_main(toot_id):
         # 准备开始上传媒体，并保存媒体id到列表
         check_mp4_duration() # 上传媒体前，检查媒体中的所有视频文件时长，如果小于1秒则复制到1秒
         media_id_list = []
-        for file in os.listdir(get_path('media')):
+        for file in sorted(os.listdir(get_path('media'))):
             file_path = get_path('media')+'/'+file
             tprint(colored('[Upload] 正在上传媒体：','blue'),file)
             media = upload_media(file_path) 
