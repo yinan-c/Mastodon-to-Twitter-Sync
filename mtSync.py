@@ -228,9 +228,9 @@ def find_safe_break(text, start, end):
         return last_space
     return end  # 若找不到空格，返回end
 
-def split_toots(input_string: str, max_length: int = 272):
+def split_toots(input_string: str, max_length: int = 270):
     '''
-    默认文段以 max_length = 272 字符进行拆分，返回拆分后的列表，并在结尾加入进度标记
+    默认文段以 max_length = 270 字符进行拆分，返回拆分后的列表，并在结尾加入进度标记
     如果文段中含有符合 regex 的链接，每个链接减去 23 个最大字符（推特将链接转成 t.co 链接，长度为 23 个字符）
     ref: https://developer.twitter.com/en/docs/counting-characters
 
@@ -248,7 +248,7 @@ def split_toots(input_string: str, max_length: int = 272):
     for i, char in enumerate(input_string):
         char_length = 2 if re.match(r'[\u4e00-\u9fff\U0001F000-\U0010ffff\uFF00-\uFFEF]', char) else 1
         part = len(result) + 1
-        tail = f'({part}/{parts})' if part == parts else f'...({part}/{parts})'
+        tail = f' ({part}/{parts})' if part == parts else f' ...({part}/{parts})'
         if url_regex.match(input_string[i:]):
             # char length should be 23 - length of url
             char_length = 23 - len(url_regex.match(input_string[i:]).group())
