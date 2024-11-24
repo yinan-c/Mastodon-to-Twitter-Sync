@@ -194,11 +194,17 @@ def prepare_toot(toots) -> dict:
 
 def filter(content : str):
     # 处理原文中有用的的 html 标签
-    content = content.replace("<br />","\n") # <br /> 为换行
-    # 清除其余的HTML标签，
+    # 先处理换行标签，将<br>和<br/>都统一替换为\n
+    content = content.replace("<br>", "\n")
+    content = content.replace("<br/>", "\n")
+    content = content.replace("<br />", "\n")
+    content = content.replace("</p><p>", "\n\n") # 段落之间添加双换行
+    # 清除其余的HTML标签
     soup = BeautifulSoup(content, 'html.parser')
     content = soup.get_text()
-    return content
+    # 处理连续的换行符,将3个及以上的换行符替换为2个
+    content = re.sub(r'\n{3,}', '\n\n', content)
+    return content.strip() # 去除首尾空白字符
 
 def load_synced_toots() -> list:
     # 读取已经同步的嘟文，返回一个列表
