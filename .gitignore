@@ -6,3 +6,5 @@ media
 synced_toots.pkl
 sync_failed.txt
 sync_wait.txt
+venv
+venv/

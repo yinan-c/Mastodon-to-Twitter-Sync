@@ -4,4 +4,4 @@ tweepy
 retrying
 termcolor
 bs4
-moviepy
+moviepy==1.0.3
